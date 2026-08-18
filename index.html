@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>骰盅 · 摇骰子小游戏</title>
+<meta name="description" content="摇骰子小游戏：自定义骰子数量，摇一摇开盅看点数">
+<meta name="theme-color" content="#0c3829">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="骰盅">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+  :root {
+    --gold: #d4af37;
+    --gold-soft: #f0d98c;
+    --cream: #f6f1e2;
+    --felt1: #12503b;
+    --felt2: #0c3829;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    background: radial-gradient(1200px 700px at 50% 16%, var(--felt1), var(--felt2) 62%, #07271d 100%);
+    color: var(--cream);
+    display: flex;
+    justify-content: center;
+    padding: calc(24px + env(safe-area-inset-top)) 14px calc(56px + env(safe-area-inset-bottom));
+  }
+  .table {
+    width: min(860px, 100%);
+    background:
+      radial-gradient(rgba(255,255,255,.026) 1px, transparent 1.4px) 0 0 / 5px 5px,
+      radial-gradient(900px 520px at 50% 28%, rgba(255,255,255,.05), transparent 66%);
+    border: 2px solid rgba(212,175,55,.5);
+    border-radius: 26px;
+    box-shadow: 0 0 0 1px rgba(212,175,55,.16), inset 0 0 90px rgba(0,0,0,.28), 0 22px 44px rgba(0,0,0,.35);
+    padding: clamp(16px, 4vw, 34px);
+  }
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: clamp(24px, 5vw, 32px);
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: var(--gold-soft);
+  }
+  .tagline {
+    margin: 3px 0 0;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgba(246,241,226,.6);
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,.22);
+    border: 1px solid rgba(212,175,55,.35);
+    border-radius: 12px;
+    padding: 6px 10px;
+  }
+  .stepper button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(212,175,55,.5);
+    background: rgba(212,175,55,.12);
+    color: var(--gold-soft);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .stepper button:hover { background: rgba(212,175,55,.26); }
+  .stepper button:active { transform: scale(.92); }
+  .count {
+    min-width: 30px;
+    text-align: center;
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--cream);
+  }
+  .stepper-label {
+    font-size: 13px;
+    color: rgba(246,241,226,.72);
+  }
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(212,175,55,.4);
+    background: transparent;
+    color: var(--cream);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .icon-btn:hover { background: rgba(212,175,55,.1); }
+  .btn-primary {
+    padding: 11px 26px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: #2b1d05;
+    background: linear-gradient(180deg, #f0d98c, #d4af37 55%, #b9952c);
+    box-shadow: 0 4px 0 #8a6d1f, 0 8px 18px rgba(0,0,0,.35);
+    transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+  }
+  .btn-primary:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 #8a6d1f; }
+  .btn-primary:disabled {
+    filter: grayscale(.45) brightness(.85);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+  }
+  .scene {
+    --tray-w: min(82vw, 400px);
+    --tray-h: calc(var(--tray-w) * 0.5);
+    position: relative;
+    width: var(--tray-w);
+    height: calc(var(--tray-h) + 212px);
+    margin: 0 auto;
+  }
+  .tray {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 100%;
+    height: var(--tray-h);
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 44%, #c99a5b 0%, #a87c42 52%, #79552a 100%);
+    border: 7px solid var(--gold);
+    box-shadow:
+      0 16px 30px rgba(0,0,0,.45),
+      inset 0 7px 15px rgba(255,255,255,.16),
+      inset 0 -12px 24px rgba(0,0,0,.3);
+    z-index: 1;
+  }
+  .tray::before {
+    content: "";
+    position: absolute;
+    inset: 11px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.2);
+    box-shadow: inset 0 2px 7px rgba(0,0,0,.2);
+  }
+  .dice-area {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .die-cell {
+    position: absolute;
+    width: var(--dice-size, 56px);
+    height: var(--dice-size, 56px);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.15);
+    transition: opacity .3s ease, transform .45s cubic-bezier(.18,1.35,.36,1);
+  }
+  .dice-area.open .die-cell {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    transition-delay: calc(var(--i) * 50ms);
+  }
+  .die {
+    width: 100%;
+    height: 100%;
+    transform: rotate(var(--rot));
+  }
+  .die-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    filter: drop-shadow(0 5px 6px rgba(0,0,0,.35));
+  }
+  .cylinder {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--tray-h) / 2 - 10px);
+    transform: translateX(-50%);
+    width: clamp(150px, 48vw, 200px);
+    height: 150px;
+    border: 3px solid var(--gold);
+    border-radius: 20px 20px 10px 10px;
+    padding: 0;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, transparent 2px 26px),
+      linear-gradient(90deg, #2c2c33, #5a5a63 32%, #33333b 68%, #232329);
+    box-shadow:
+      inset 0 0 30px rgba(0,0,0,.55),
+      inset 0 -16px 22px rgba(0,0,0,.3),
+      0 18px 28px rgba(0,0,0,.45);
+    cursor: pointer;
+    z-index: 3;
+    transition: transform .55s cubic-bezier(.34,1.35,.42,1), opacity .45s ease, filter .2s ease;
+  }
+  .cylinder:hover { filter: brightness(1.08); }
+  .cylinder:focus-visible {
+    outline: 2px solid var(--gold-soft);
+    outline-offset: 4px;
+  }
+  .cylinder-top {
+    position: absolute;
+    left: -11px;
+    right: -11px;
+    top: -14px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #4d4d57, #232329);
+    border: 3px solid var(--gold);
+    box-shadow: inset 0 2px 5px rgba(255,255,255,.12), 0 4px 6px rgba(0,0,0,.35);
+  }
+  .cylinder::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 8px;
+    height: 17px;
+    border-top: 3px solid var(--gold);
+    border-bottom: 2px solid rgba(212,175,55,.45);
+    border-radius: 0 0 8px 8px;
+    background: linear-gradient(90deg, rgba(212,175,55,.12), rgba(212,175,55,.34) 40%, rgba(212,175,55,.12));
+  }
+  .knob {
+    position: absolute;
+    left: 50%;
+    top: -36px;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 34px;
+    border-radius: 50% 50% 46% 46%;
+    background: radial-gradient(circle at 38% 30%, #ffe9a8, #d4af37 55%, #9c7c24);
+    box-shadow: 0 3px 5px rgba(0,0,0,.4), inset 0 -3px 5px rgba(0,0,0,.25);
+    z-index: 2;
+  }
+  .scene.shaking .cylinder { animation: shake .42s linear infinite; }
+  @keyframes shake {
+    0%   { transform: translate(-50%, 0) rotate(0); }
+    12%  { transform: translate(calc(-50% - 7px), 2px) rotate(-2.2deg); }
+    25%  { transform: translate(calc(-50% + 7px), -3px) rotate(2.5deg); }
+    37%  { transform: translate(calc(-50% - 6px), 3px) rotate(-1.8deg); }
+    50%  { transform: translate(calc(-50% + 6px), -2px) rotate(1.9deg); }
+    62%  { transform: translate(calc(-50% - 5px), 2px) rotate(-1.4deg); }
+    75%  { transform: translate(calc(-50% + 4px), -2px) rotate(1.1deg); }
+    88%  { transform: translate(calc(-50% - 3px), 1px) rotate(-.7deg); }
+    100% { transform: translate(-50%, 0) rotate(0); }
+  }
+  .scene.opened .cylinder {
+    transform: translate(-50%, -215px) rotate(-7deg);
+    opacity: .38;
+  }
+
+  .result {
+    margin-top: 6px;
+    min-height: 54px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .35s ease, transform .35s ease;
+  }
+  .result.show { opacity: 1; transform: none; }
+  .result-sum {
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: rgba(246,241,226,.78);
+  }
+  .result-sum strong {
+    font-size: clamp(34px, 7vw, 44px);
+    font-weight: 500;
+    color: var(--gold-soft);
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .result-values {
+    margin-top: 3px;
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+  .hint {
+    margin: 10px 0 0;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-align: center;
+    color: rgba(246,241,226,.55);
+  }
+  :focus-visible {
+    outline: 2px solid var(--gold-soft);
+    outline-offset: 2px;
+  }
+  @media (max-width: 480px) {
+    .controls { width: 100%; justify-content: space-between; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scene.shaking .cylinder { animation: none; }
+    .cylinder, .die-cell, .result { transition-duration: .01ms; }
+  }
+</style>
+</head>
+<body>
+<div class="table">
+  <header class="topbar">
+    <div class="brand">
+      <h1>🎲 骰盅</h1>
+      <p class="tagline">摇一摇 · 开盅看点数</p>
+    </div>
+    <div class="controls">
+      <div class="stepper" role="group" aria-label="骰子数量">
+        <button type="button" id="decBtn" aria-label="减少骰子">−</button>
+        <span class="count" id="countLabel">5</span>
+        <button type="button" id="incBtn" aria-label="增加骰子">＋</button>
+        <span class="stepper-label">颗骰子</span>
+      </div>
+      <button type="button" id="soundBtn" class="icon-btn" aria-pressed="true">🔊 音效</button>
+      <button type="button" id="shakeBtn" class="btn-primary">开始</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="scene" id="scene">
+      <div class="tray" id="tray" aria-hidden="true">
+        <div class="dice-area" id="diceArea" aria-label="骰子"></div>
+      </div>
+      <button type="button" class="cylinder" id="cylinder" aria-label="点击开始，摇骰开盅">
+        <span class="cylinder-top" aria-hidden="true"></span>
+        <span class="knob" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="result" id="result" aria-live="polite">
+      <div class="result-sum">总点数 <strong id="sum">0</strong></div>
+      <div class="result-values" id="values"></div>
+    </div>
+
+    <p class="hint" id="hint">点击「开始」摇骰开盅</p>
+  </main>
+</div>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("sw.js").catch(function () {});
+      });
+    }
+  </script>
+  <script>
+    (function () {
+    "use strict";
+
+    var COUNT_MIN = 1, COUNT_MAX = 10;
+    var scene = document.getElementById("scene");
+    var cylinder = document.getElementById("cylinder");
+    var diceArea = document.getElementById("diceArea");
+    var tray = document.getElementById("tray");
+    var result = document.getElementById("result");
+    var sumEl = document.getElementById("sum");
+    var valuesEl = document.getElementById("values");
+    var hint = document.getElementById("hint");
+    var countLabel = document.getElementById("countLabel");
+    var decBtn = document.getElementById("decBtn");
+    var incBtn = document.getElementById("incBtn");
+    var shakeBtn = document.getElementById("shakeBtn");
+    var soundBtn = document.getElementById("soundBtn");
+
+    var count = 5;
+    var values = [];
+    var phase = "closed"; // closed | shaking | open
+    var soundOn = true;
+    var shakeTimer = null;
+    var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var SHAKE_MS = reducedMotion ? 380 : 1000;
+
+    function roll() {
+      return 1 + Math.floor(Math.random() * 6);
+    }
+
+    function pipCircles(v) {
+      var p = {
+        1: [[50, 50]],
+        2: [[72, 28], [28, 72]],
+        3: [[72, 28], [50, 50], [28, 72]],
+        4: [[28, 28], [72, 28], [28, 72], [72, 72]],
+        5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
+        6: [[28, 28], [28, 50], [28, 72], [72, 28], [72, 50], [72, 72]]
+      };
+      return p[v].map(function (d) {
+        return '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="9.5"/>';
+      }).join("");
+    }
+
+    function dieSVG(v) {
+      return '<svg class="die-svg" viewBox="0 0 100 100" role="img" aria-label="' + v + '点">' +
+        '<rect x="3" y="3" width="94" height="94" rx="19" fill="#fbf8ef" stroke="#cbbf9f" stroke-width="4"/>' +
+        '<g fill="#20242b">' + pipCircles(v) + '</g></svg>';
+    }
+
+    // 将骰子随机散布在圆形底盖上
+    function layoutDice() {
+      var tw = tray.clientWidth;
+      var th = tray.clientHeight;
+      var base = Math.max(32, Math.min(56, tw * 0.13));
+      var size = count > 8 ? base * 0.62 : count > 6 ? base * 0.8 : base;
+      diceArea.style.setProperty("--dice-size", size.toFixed(1) + "px");
+
+      var rx = tw / 2 - size / 2 - 3;
+      var ry = th / 2 - size / 2 - 3;
+      var minGap = size * 1.05;
+      var placed = [];
+      var cells = [];
+
+      for (var i = 0; i < count; i++) {
+        var best = null;
+        for (var t = 0; t < 150; t++) {
+          var ang = Math.random() * Math.PI * 2;
+          var r = Math.sqrt(Math.random()) * Math.min(rx, ry);
+          var px = tw / 2 + r * Math.cos(ang);
+          var py = th / 2 + r * Math.sin(ang) * (ry / rx);
+          if (px < size / 2 + 2 || px > tw - size / 2 - 2 ||
+              py < size / 2 + 2 || py > th - size / 2 - 2) continue;
+          var ok = true;
+          for (var j = 0; j < placed.length; j++) {
+            var dx = px - placed[j].x;
+            var dy = py - placed[j].y;
+            if (Math.abs(dx) < minGap && Math.abs(dy) < minGap) { ok = false; break; }
+          }
+          if (ok) { best = { x: px, y: py }; break; }
+        }
+        // 随机采样失败时，用同心网格兜底，保证不重叠
+        if (!best) {
+          var step = minGap * 1.02;
+          outer:
+          for (var ring = 0; ring < 6; ring++) {
+            for (var gx = -ring; gx <= ring; gx++) {
+              for (var gy = -ring; gy <= ring; gy++) {
+                if (ring > 0 && gx !== -ring && gx !== ring && gy !== -ring && gy !== ring) continue;
+                var gpx = tw / 2 + gx * step + (Math.random() - 0.5) * step * 0.25;
+                var gpy = th / 2 + gy * step + (Math.random() - 0.5) * step * 0.25;
+                var ex = (gpx - tw / 2) / rx;
+                var ey = (gpy - th / 2) / ry;
+                if (ex * ex + ey * ey > 1) continue;
+                var gok = true;
+                for (var gj = 0; gj < placed.length; gj++) {
+                  var gdx = gpx - placed[gj].x;
+                  var gdy = gpy - placed[gj].y;
+                  if (Math.abs(gdx) < minGap && Math.abs(gdy) < minGap) { gok = false; break; }
+                }
+                if (gok) { best = { x: gpx, y: gpy }; break outer; }
+              }
+            }
+          }
+        }
+        if (!best) {
+          best = { x: tw / 2, y: th / 2 };
+        }
+        placed.push(best);
+        var rot = (Math.random() * 2 - 1) * 30;
+        cells.push(
+          '<div class="die-cell" style="--i:' + i + ';left:' + (best.x / tw * 100).toFixed(2) + '%;top:' + (best.y / th * 100).toFixed(2) + '%">' +
+          '<div class="die" style="--rot:' + rot.toFixed(1) + 'deg">' + dieSVG(values[i]) + '</div></div>'
+        );
+      }
+      diceArea.innerHTML = cells.join("");
+    }
+
+    function setHint(text) {
+      hint.textContent = text;
+    }
+
+    function open() {
+      phase = "open";
+      scene.classList.add("opened");
+      diceArea.classList.add("open");
+      var sum = values.reduce(function (a, b) { return a + b; }, 0);
+      sumEl.textContent = sum;
+      valuesEl.textContent = values.join(" · ");
+      result.classList.add("show");
+      shakeBtn.textContent = "再来一局";
+      setHint("点击「再来一局」或圆柱盖，再摇一次");
+      clackSound();
+    }
+
+    function shake() {
+      if (phase === "shaking") return;
+      if (shakeTimer) clearTimeout(shakeTimer);
+      values = [];
+      for (var i = 0; i < count; i++) values.push(roll());
+      layoutDice();
+      diceArea.classList.remove("open");
+      result.classList.remove("show");
+      scene.classList.remove("opened");
+      void scene.offsetWidth; // restart animation
+      scene.classList.add("shaking");
+      phase = "shaking";
+      shakeBtn.disabled = true;
+      setHint("骰子在盅里转…");
+      rattleSound();
+      shakeTimer = setTimeout(function () {
+        scene.classList.remove("shaking");
+        shakeBtn.disabled = false;
+        open();
+      }, SHAKE_MS);
+    }
+
+    function setCount(n) {
+      count = Math.max(COUNT_MIN, Math.min(COUNT_MAX, n));
+      countLabel.textContent = count;
+      values = [];
+      for (var i = 0; i < count; i++) values.push(roll());
+      layoutDice();
+      if (shakeTimer) { clearTimeout(shakeTimer); shakeTimer = null; }
+      scene.classList.remove("opened", "shaking");
+      diceArea.classList.remove("open");
+      result.classList.remove("show");
+      phase = "closed";
+      shakeBtn.disabled = false;
+      shakeBtn.textContent = "开始";
+      setHint("点击「开始」摇骰开盅");
+    }
+
+    // ---- 音效 ----
+    var actx = null;
+    function audioCtx() {
+      if (!actx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) actx = new AC();
+      }
+      if (actx && actx.state === "suspended") actx.resume();
+      return actx;
+    }
+    function rattleSound() {
+      if (!soundOn) return;
+      try {
+        var ac = audioCtx();
+        if (!ac) return;
+        var dur = 0.85;
+        var buf = ac.createBuffer(1, Math.floor(ac.sampleRate * dur), ac.sampleRate);
+        var d = buf.getChannelData(0);
+        for (var i = 0; i < d.length; i++) {
+          var t = i / d.length;
+          var env = t < 0.12 ? t / 0.12 : Math.exp(-(t - 0.12) * 3.4);
+          d[i] = (Math.random() * 2 - 1) * env * 0.9;
+        }
+        var src = ac.createBufferSource();
+        src.buffer = buf;
+        var bp = ac.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = 2600;
+        bp.Q.value = 0.9;
+        var g = ac.createGain();
+        g.gain.value = 0.16;
+        src.connect(bp); bp.connect(g); g.connect(ac.destination);
+        src.start();
+      } catch (e) { /* 忽略音频错误 */ }
+    }
+    function clackSound() {
+      if (!soundOn) return;
+      try {
+        var ac = audioCtx();
+        if (!ac) return;
+        var t = ac.currentTime;
+        [0, 0.09].forEach(function (dt) {
+          var o = ac.createOscillator();
+          var g = ac.createGain();
+          o.type = "sine";
+          o.frequency.setValueAtTime(210, t + dt);
+          o.frequency.exponentialRampToValueAtTime(90, t + dt + 0.12);
+          g.gain.setValueAtTime(0.22, t + dt);
+          g.gain.exponentialRampToValueAtTime(0.001, t + dt + 0.14);
+          o.connect(g); g.connect(ac.destination);
+          o.start(t + dt);
+          o.stop(t + dt + 0.16);
+        });
+      } catch (e) { /* 忽略音频错误 */ }
+    }
+
+    // ---- 事件 ----
+    shakeBtn.addEventListener("click", shake);
+    cylinder.addEventListener("click", function () {
+      if (phase !== "shaking") shake();
+    });
+    decBtn.addEventListener("click", function () { setCount(count - 1); });
+    incBtn.addEventListener("click", function () { setCount(count + 1); });
+    soundBtn.addEventListener("click", function () {
+      soundOn = !soundOn;
+      soundBtn.setAttribute("aria-pressed", String(soundOn));
+      soundBtn.textContent = soundOn ? "🔊 音效" : "🔇 音效";
+    });
+
+    // ---- 初始化 ----
+    for (var i = 0; i < count; i++) values.push(roll());
+    layoutDice();
+  })();
+</script>
+</body>
+</html>
