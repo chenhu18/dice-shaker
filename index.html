@@ -574,9 +574,10 @@
     }
 
     function dieSVG(v) {
+      var pip = (v === 1 || v === 4) ? "#c93a2d" : "#20242b";
       return '<svg class="die-svg" viewBox="0 0 100 100" role="img" aria-label="' + v + '点">' +
         '<rect x="3" y="3" width="94" height="94" rx="19" fill="#fbf8ef" stroke="#cbbf9f" stroke-width="4"/>' +
-        '<g fill="#20242b">' + pipCircles(v) + '</g></svg>';
+        '<g fill="' + pip + '">' + pipCircles(v) + '</g></svg>';
     }
 
     function layoutDice() {
