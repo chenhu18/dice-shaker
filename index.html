@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>骰盅 · 摇骰子小游戏</title>
-<meta name="description" content="摇骰子小游戏：自定义骰子数量，摇一摇开盅看点数">
+<title>骰盅</title>
+<meta name="description" content="骰盅：每人一个独立骰盅，摇一摇开盅看点数">
 <meta name="theme-color" content="#0c3829">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -30,10 +30,10 @@
     color: var(--cream);
     display: flex;
     justify-content: center;
-    padding: calc(24px + env(safe-area-inset-top)) 14px calc(56px + env(safe-area-inset-bottom));
+    padding: 24px 14px 56px;
   }
   .table {
-    width: min(860px, 100%);
+    width: min(760px, 100%);
     background:
       radial-gradient(rgba(255,255,255,.026) 1px, transparent 1.4px) 0 0 / 5px 5px,
       radial-gradient(900px 520px at 50% 28%, rgba(255,255,255,.05), transparent 66%);
@@ -48,7 +48,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
   .brand h1 {
     margin: 0;
@@ -142,14 +142,26 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0;
+    gap: 6px;
+    padding-top: 4px;
+  }
+  .shake-btn {
+    margin-top: 2px;
+    padding: 14px 38px;
+    font-size: 17px;
+    letter-spacing: 5px;
+    border-radius: 18px;
+    box-shadow:
+      0 5px 0 #8a6d1f,
+      0 12px 26px rgba(212,175,55,.22),
+      0 8px 18px rgba(0,0,0,.35);
   }
   .scene {
-    --tray-w: min(82vw, 400px);
-    --tray-h: calc(var(--tray-w) * 0.5);
+    --cup-w: clamp(180px, 56vw, 300px);
+    --tray-h: calc(var(--cup-w) * 0.5);
     position: relative;
-    width: var(--tray-w);
-    height: calc(var(--tray-h) + 212px);
+    width: var(--cup-w);
+    height: calc(var(--tray-h) + 252px);
     margin: 0 auto;
   }
   .tray {
@@ -157,10 +169,12 @@
     left: 50%;
     bottom: 0;
     transform: translateX(-50%);
-    width: 100%;
+    width: var(--cup-w);
     height: var(--tray-h);
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 44%, #c99a5b 0%, #a87c42 52%, #79552a 100%);
+    background:
+      repeating-radial-gradient(circle at 50% 44%, rgba(0,0,0,.07) 0 2px, transparent 2px 24px),
+      radial-gradient(circle at 50% 44%, #c99a5b 0%, #a87c42 52%, #79552a 100%);
     border: 7px solid var(--gold);
     box-shadow:
       0 16px 30px rgba(0,0,0,.45),
@@ -181,19 +195,14 @@
     inset: 0;
     z-index: 2;
     pointer-events: none;
+    clip-path: inset(calc(var(--tray-h) - var(--lift, 0px)) 0 0 0);
   }
   .die-cell {
     position: absolute;
-    width: var(--dice-size, 56px);
-    height: var(--dice-size, 56px);
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(.15);
-    transition: opacity .3s ease, transform .45s cubic-bezier(.18,1.35,.36,1);
-  }
-  .dice-area.open .die-cell {
+    width: var(--dice-size, 30px);
+    height: var(--dice-size, 30px);
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-    transition-delay: calc(var(--i) * 50ms);
+    transform: translate(-50%, -50%);
   }
   .die {
     width: 100%;
@@ -209,23 +218,38 @@
   .cylinder {
     position: absolute;
     left: 50%;
-    bottom: calc(var(--tray-h) / 2 - 10px);
-    transform: translateX(-50%);
-    width: clamp(150px, 48vw, 200px);
-    height: 150px;
+    bottom: 0;
+    transform: translate(-50%, calc(-1 * var(--lift, 0px))) rotate(var(--tilt, 0deg));
+    width: var(--cup-w);
+    height: calc(var(--tray-h) + 88px);
     border: 3px solid var(--gold);
-    border-radius: 20px 20px 10px 10px;
+    border-radius: 18px 18px 10px 10px;
     padding: 0;
     background:
       repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, transparent 2px 26px),
-      linear-gradient(90deg, #2c2c33, #5a5a63 32%, #33333b 68%, #232329);
+      linear-gradient(90deg, #26262d 0%, #4e4e58 22%, #6d6d78 38%, #3a3a43 64%, #1f1f25 100%);
     box-shadow:
-      inset 0 0 30px rgba(0,0,0,.55),
-      inset 0 -16px 22px rgba(0,0,0,.3),
+      inset 0 0 34px rgba(0,0,0,.5),
+      inset 0 -20px 28px rgba(0,0,0,.35),
       0 18px 28px rgba(0,0,0,.45);
-    cursor: pointer;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
     z-index: 3;
-    transition: transform .55s cubic-bezier(.34,1.35,.42,1), opacity .45s ease, filter .2s ease;
+    transition: transform .18s ease-out, filter .2s ease;
+  }
+  .cylinder::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.16) 16%, rgba(255,255,255,.05) 32%, transparent 46%);
+    pointer-events: none;
+  }
+  .cylinder.dragging {
+    cursor: grabbing;
+    transition: none;
   }
   .cylinder:hover { filter: brightness(1.08); }
   .cylinder:focus-visible {
@@ -264,7 +288,10 @@
     height: 34px;
     border-radius: 50% 50% 46% 46%;
     background: radial-gradient(circle at 38% 30%, #ffe9a8, #d4af37 55%, #9c7c24);
-    box-shadow: 0 3px 5px rgba(0,0,0,.4), inset 0 -3px 5px rgba(0,0,0,.25);
+    box-shadow:
+      0 0 0 5px rgba(212,175,55,.22),
+      0 4px 8px rgba(0,0,0,.45),
+      inset 0 -3px 5px rgba(0,0,0,.25);
     z-index: 2;
   }
   .scene.shaking .cylinder { animation: shake .42s linear infinite; }
@@ -279,40 +306,31 @@
     88%  { transform: translate(calc(-50% - 3px), 1px) rotate(-.7deg); }
     100% { transform: translate(-50%, 0) rotate(0); }
   }
-  .scene.opened .cylinder {
-    transform: translate(-50%, -215px) rotate(-7deg);
-    opacity: .38;
-  }
 
-  .result {
-    margin-top: 6px;
-    min-height: 54px;
-    text-align: center;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: opacity .35s ease, transform .35s ease;
-  }
-  .result.show { opacity: 1; transform: none; }
-  .result-sum {
+  .sum {
+    margin-top: 8px;
+    min-height: 38px;
     font-size: 15px;
     letter-spacing: 1px;
-    color: rgba(246,241,226,.78);
+    color: rgba(246,241,226,.8);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .25s ease, transform .25s ease;
   }
-  .result-sum strong {
-    font-size: clamp(34px, 7vw, 44px);
+  .sum.show {
+    opacity: 1;
+    transform: none;
+  }
+  .sum strong {
+    font-size: 30px;
     font-weight: 500;
     color: var(--gold-soft);
     margin-left: 8px;
     vertical-align: middle;
   }
-  .result-values {
-    margin-top: 3px;
-    font-size: 15px;
-    letter-spacing: 2px;
-    color: var(--gold);
-  }
   .hint {
-    margin: 10px 0 0;
+    margin: 8px 0 0;
     font-size: 13px;
     letter-spacing: 1px;
     text-align: center;
@@ -324,10 +342,11 @@
   }
   @media (max-width: 480px) {
     .controls { width: 100%; justify-content: space-between; }
+    .btn-primary { padding: 10px 18px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .scene.shaking .cylinder { animation: none; }
-    .cylinder, .die-cell, .result { transition-duration: .01ms; }
+    .cylinder, .die-cell, .dice-area, .sum { transition-duration: .01ms; }
   }
 </style>
 </head>
@@ -336,7 +355,6 @@
   <header class="topbar">
     <div class="brand">
       <h1>🎲 骰盅</h1>
-      <p class="tagline">摇一摇 · 开盅看点数</p>
     </div>
     <div class="controls">
       <div class="stepper" role="group" aria-label="骰子数量">
@@ -346,7 +364,6 @@
         <span class="stepper-label">颗骰子</span>
       </div>
       <button type="button" id="soundBtn" class="icon-btn" aria-pressed="true">🔊 音效</button>
-      <button type="button" id="shakeBtn" class="btn-primary">开始</button>
     </div>
   </header>
 
@@ -355,18 +372,15 @@
       <div class="tray" id="tray" aria-hidden="true">
         <div class="dice-area" id="diceArea" aria-label="骰子"></div>
       </div>
-      <button type="button" class="cylinder" id="cylinder" aria-label="点击开始，摇骰开盅">
+      <button type="button" class="cylinder" id="cylinder" aria-label="拖动盖子偷看骰子">
         <span class="cylinder-top" aria-hidden="true"></span>
         <span class="knob" aria-hidden="true"></span>
       </button>
     </div>
 
-    <div class="result" id="result" aria-live="polite">
-      <div class="result-sum">总点数 <strong id="sum">0</strong></div>
-      <div class="result-values" id="values"></div>
-    </div>
-
-    <p class="hint" id="hint">点击「开始」摇骰开盅</p>
+    <button type="button" id="shakeBtn" class="btn-primary shake-btn">摇一摇</button>
+    <div class="sum" id="sum" aria-live="polite">总点数 <strong id="sumValue">0</strong></div>
+    <p class="hint" id="hint">点击「摇一摇」摇骰，拖动盖子偷看</p>
   </main>
 </div>
 
@@ -382,13 +396,14 @@
     "use strict";
 
     var COUNT_MIN = 1, COUNT_MAX = 10;
+    var SHAKE_MS = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 380 : 1000;
+
     var scene = document.getElementById("scene");
-    var cylinder = document.getElementById("cylinder");
-    var diceArea = document.getElementById("diceArea");
     var tray = document.getElementById("tray");
-    var result = document.getElementById("result");
+    var diceArea = document.getElementById("diceArea");
+    var cylinder = document.getElementById("cylinder");
     var sumEl = document.getElementById("sum");
-    var valuesEl = document.getElementById("values");
+    var sumValue = document.getElementById("sumValue");
     var hint = document.getElementById("hint");
     var countLabel = document.getElementById("countLabel");
     var decBtn = document.getElementById("decBtn");
@@ -398,15 +413,11 @@
 
     var count = 5;
     var values = [];
-    var phase = "closed"; // closed | shaking | open
+    var shaking = false;
     var soundOn = true;
     var shakeTimer = null;
-    var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var SHAKE_MS = reducedMotion ? 380 : 1000;
 
-    function roll() {
-      return 1 + Math.floor(Math.random() * 6);
-    }
+    function roll() { return 1 + Math.floor(Math.random() * 6); }
 
     function pipCircles(v) {
       var p = {
@@ -428,12 +439,11 @@
         '<g fill="#20242b">' + pipCircles(v) + '</g></svg>';
     }
 
-    // 将骰子随机散布在圆形底盖上
     function layoutDice() {
       var tw = tray.clientWidth;
       var th = tray.clientHeight;
-      var base = Math.max(32, Math.min(56, tw * 0.13));
-      var size = count > 8 ? base * 0.62 : count > 6 ? base * 0.8 : base;
+      var base = Math.max(18, Math.min(52, tw * 0.13));
+      var size = values.length > 8 ? base * 0.72 : values.length > 6 ? base * 0.84 : base;
       diceArea.style.setProperty("--dice-size", size.toFixed(1) + "px");
 
       var rx = tw / 2 - size / 2 - 3;
@@ -442,7 +452,7 @@
       var placed = [];
       var cells = [];
 
-      for (var i = 0; i < count; i++) {
+      for (var i = 0; i < values.length; i++) {
         var best = null;
         for (var t = 0; t < 150; t++) {
           var ang = Math.random() * Math.PI * 2;
@@ -459,7 +469,6 @@
           }
           if (ok) { best = { x: px, y: py }; break; }
         }
-        // 随机采样失败时，用同心网格兜底，保证不重叠
         if (!best) {
           var step = minGap * 1.02;
           outer:
@@ -483,9 +492,7 @@
             }
           }
         }
-        if (!best) {
-          best = { x: tw / 2, y: th / 2 };
-        }
+        if (!best) best = { x: tw / 2, y: th / 2 };
         placed.push(best);
         var rot = (Math.random() * 2 - 1) * 30;
         cells.push(
@@ -496,60 +503,100 @@
       diceArea.innerHTML = cells.join("");
     }
 
-    function setHint(text) {
-      hint.textContent = text;
+    function setLift(lift) {
+      scene.style.setProperty("--lift", lift + "px");
+      scene.style.setProperty("--tilt", (lift * -0.02).toFixed(2) + "deg");
     }
 
-    function open() {
-      phase = "open";
-      scene.classList.add("opened");
-      diceArea.classList.add("open");
-      var sum = values.reduce(function (a, b) { return a + b; }, 0);
-      sumEl.textContent = sum;
-      valuesEl.textContent = values.join(" · ");
-      result.classList.add("show");
-      shakeBtn.textContent = "再来一局";
-      setHint("点击「再来一局」或圆柱盖，再摇一次");
-      clackSound();
+    function resetCup() {
+      scene.classList.remove("shaking");
+      setLift(0);
+      sumEl.classList.remove("show");
     }
+
+    function setHint(text) { hint.textContent = text; }
 
     function shake() {
-      if (phase === "shaking") return;
+      if (shaking) return;
       if (shakeTimer) clearTimeout(shakeTimer);
       values = [];
       for (var i = 0; i < count; i++) values.push(roll());
       layoutDice();
-      diceArea.classList.remove("open");
-      result.classList.remove("show");
-      scene.classList.remove("opened");
+      resetCup();
       void scene.offsetWidth; // restart animation
       scene.classList.add("shaking");
-      phase = "shaking";
+      shaking = true;
       shakeBtn.disabled = true;
       setHint("骰子在盅里转…");
       rattleSound();
       shakeTimer = setTimeout(function () {
         scene.classList.remove("shaking");
+        shaking = false;
         shakeBtn.disabled = false;
-        open();
+        setHint("拖动盖子偷看骰子");
       }, SHAKE_MS);
     }
 
     function setCount(n) {
       count = Math.max(COUNT_MIN, Math.min(COUNT_MAX, n));
       countLabel.textContent = count;
+      if (shakeTimer) { clearTimeout(shakeTimer); shakeTimer = null; }
       values = [];
       for (var i = 0; i < count; i++) values.push(roll());
       layoutDice();
-      if (shakeTimer) { clearTimeout(shakeTimer); shakeTimer = null; }
-      scene.classList.remove("opened", "shaking");
-      diceArea.classList.remove("open");
-      result.classList.remove("show");
-      phase = "closed";
+      resetCup();
+      shaking = false;
       shakeBtn.disabled = false;
-      shakeBtn.textContent = "开始";
-      setHint("点击「开始」摇骰开盅");
+      setHint("点击「摇一摇」摇骰");
     }
+
+    // ---- 手动拉盖 ----
+    var dragging = false;
+    var startY = 0;
+    var startLift = 0;
+    var moved = 0;
+    var lift = 0;
+
+    function currentMaxLift() {
+      return tray.clientHeight + 30;
+    }
+    function applyLift(l) {
+      lift = Math.max(0, Math.min(currentMaxLift(), l));
+      setLift(lift);
+      var th = tray.clientHeight || 1;
+      if (lift / th > 0.55) {
+        sumValue.textContent = values.reduce(function (a, b) { return a + b; }, 0);
+        sumEl.classList.add("show");
+      } else {
+        sumEl.classList.remove("show");
+      }
+    }
+
+    cylinder.addEventListener("pointerdown", function (e) {
+      if (shaking) return;
+      dragging = true;
+      scene.classList.add("dragging");
+      moved = 0;
+      startY = e.clientY;
+      startLift = lift;
+      cylinder.classList.add("dragging");
+      try { cylinder.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+    cylinder.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      moved = Math.max(moved, Math.abs(e.clientY - startY));
+      applyLift(startLift + (startY - e.clientY));
+    });
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      scene.classList.remove("dragging");
+      cylinder.classList.remove("dragging");
+      if (moved < 6) applyLift(lift > 0 ? 0 : currentMaxLift());
+    }
+    cylinder.addEventListener("pointerup", endDrag);
+    cylinder.addEventListener("pointercancel", endDrag);
 
     // ---- 音效 ----
     var actx = null;
@@ -566,25 +613,76 @@
       try {
         var ac = audioCtx();
         if (!ac) return;
-        var dur = 0.85;
-        var buf = ac.createBuffer(1, Math.floor(ac.sampleRate * dur), ac.sampleRate);
-        var d = buf.getChannelData(0);
-        for (var i = 0; i < d.length; i++) {
-          var t = i / d.length;
-          var env = t < 0.12 ? t / 0.12 : Math.exp(-(t - 0.12) * 3.4);
-          d[i] = (Math.random() * 2 - 1) * env * 0.9;
+        var t0 = ac.currentTime;
+        var dur = 0.95;
+
+        var comp = ac.createDynamicsCompressor();
+        comp.threshold.value = -18;
+        comp.knee.value = 20;
+        comp.ratio.value = 8;
+        comp.attack.value = 0.002;
+        comp.release.value = 0.15;
+        comp.connect(ac.destination);
+
+        // 盅体低频共鸣
+        var bedDur = dur;
+        var bedBuf = ac.createBuffer(1, Math.floor(ac.sampleRate * bedDur), ac.sampleRate);
+        var bd = bedBuf.getChannelData(0);
+        for (var bi = 0; bi < bd.length; bi++) bd[bi] = (Math.random() * 2 - 1) * 0.45;
+        var bedSrc = ac.createBufferSource();
+        bedSrc.buffer = bedBuf;
+        var lp = ac.createBiquadFilter();
+        lp.type = "lowpass";
+        lp.frequency.value = 420;
+        var bg = ac.createGain();
+        bg.gain.setValueAtTime(0.0001, t0);
+        bg.gain.exponentialRampToValueAtTime(0.14, t0 + 0.09);
+        bg.gain.exponentialRampToValueAtTime(0.0001, t0 + bedDur);
+        bedSrc.connect(lp); lp.connect(bg); bg.connect(comp);
+        bedSrc.start(t0);
+
+        // 骰子撞击盅壁的嗒嗒声
+        function impact(at) {
+          var clickDur = 0.018 + Math.random() * 0.03;
+          var buf = ac.createBuffer(1, Math.floor(ac.sampleRate * clickDur), ac.sampleRate);
+          var d = buf.getChannelData(0);
+          for (var i = 0; i < d.length; i++) {
+            d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+          }
+          var src = ac.createBufferSource();
+          src.buffer = buf;
+          var bp = ac.createBiquadFilter();
+          bp.type = "bandpass";
+          bp.frequency.value = 1400 + Math.random() * 2600;
+          bp.Q.value = 2 + Math.random() * 5;
+          var g = ac.createGain();
+          var vol = 0.07 + Math.random() * 0.17;
+          g.gain.setValueAtTime(vol, at);
+          g.gain.exponentialRampToValueAtTime(0.001, at + clickDur);
+          src.connect(bp); bp.connect(g); g.connect(comp);
+          src.start(at);
+          src.stop(at + clickDur + 0.01);
+
+          // 骰子落底的闷响
+          var o = ac.createOscillator();
+          o.type = "sine";
+          var f = 170 + Math.random() * 170;
+          o.frequency.setValueAtTime(f, at);
+          o.frequency.exponentialRampToValueAtTime(f * 0.45, at + 0.055);
+          var og = ac.createGain();
+          og.gain.setValueAtTime(0.09 + Math.random() * 0.14, at);
+          og.gain.exponentialRampToValueAtTime(0.001, at + 0.065);
+          o.connect(og); og.connect(comp);
+          o.start(at);
+          o.stop(at + 0.07);
         }
-        var src = ac.createBufferSource();
-        src.buffer = buf;
-        var bp = ac.createBiquadFilter();
-        bp.type = "bandpass";
-        bp.frequency.value = 2600;
-        bp.Q.value = 0.9;
-        var g = ac.createGain();
-        g.gain.value = 0.16;
-        src.connect(bp); bp.connect(g); g.connect(ac.destination);
-        src.start();
-      } catch (e) { /* 忽略音频错误 */ }
+
+        var t = t0 + 0.04;
+        while (t < t0 + dur) {
+          impact(t);
+          t += 0.024 + Math.random() * 0.085;
+        }
+      } catch (e) {}
     }
     function clackSound() {
       if (!soundOn) return;
@@ -604,14 +702,11 @@
           o.start(t + dt);
           o.stop(t + dt + 0.16);
         });
-      } catch (e) { /* 忽略音频错误 */ }
+      } catch (e) {}
     }
 
     // ---- 事件 ----
     shakeBtn.addEventListener("click", shake);
-    cylinder.addEventListener("click", function () {
-      if (phase !== "shaking") shake();
-    });
     decBtn.addEventListener("click", function () { setCount(count - 1); });
     incBtn.addEventListener("click", function () { setCount(count + 1); });
     soundBtn.addEventListener("click", function () {
@@ -621,6 +716,7 @@
     });
 
     // ---- 初始化 ----
+    values = [];
     for (var i = 0; i < count; i++) values.push(roll());
     layoutDice();
   })();
